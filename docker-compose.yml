@@ -1,0 +1,12 @@
+version: '3'
+services:
+  # for unit test local environment
+  unittest:
+    build:
+        context: .
+    environment:
+        - CHANNEL_SECRET=${CHANNEL_SECRET}
+        - CHANNEL_ACCESS_TOKEN=${CHANNEL_ACCESS_TOKEN}
+        - DEVELOPER=${DEVELOPER}
+        - NOTIFY_TOKEN=${NOTIFY_TOKEN}
+    command: python -u test_line.py

@@ -17,6 +17,9 @@ CHANNEL_ACCESS_TOKEN = os.environ.get('LINE_CHANNEL_ACCESS_TOKEN')
 # how many days required to notify when user forget to record body temp.
 N_DAYS_NOTIFY_TO_USER = os.environ.get('N_DAYS_NOTIFY_TO_USER')
 N_DAYS_NOTIFY_TO_EXECUTIVES = os.environ.get('N_DAYS_NOTIFY_TO_EXECUTIVES')
+# number of days to determine whether the person has COVID19 or not
+N_DAYS_FEVER = os.environ.get('N_DAYS_FEVER')
+MAX_BODY_TEMPERATURE = os.environ.get('MAX_BODY_TEMPERATURE')
 
 
 def notify_missing_to_users(request):
@@ -57,12 +60,20 @@ def notify_missing_to_users(request):
         logging.info(traceback.format_exc())
         return abort(500)
 
-    return jsonify({'message': 'ok'})
-
-
-def alert_if_doubt(request):
     # alert if a user has records over 37.5 in the last week -> operators
-    pass
+    try:
+        fever_users = bq.find_fever_users(
+            n_days=N_DAYS_FEVER, max_temp=MAX_BODY_TEMPERATURE)
+
+        if len(fever_users) > 0:
+            notify_messanger.push(message=_create_fever_message(fever_users))
+    except Exception as e:
+        # TODO: 管理者通知処理の追加
+        logging.error(str(e))
+        logging.info(traceback.format_exc())
+        return abort(500)
+
+    return jsonify({'message': 'ok'})
 
 
 def _create_prompt_message():
@@ -73,4 +84,11 @@ def _create_notification_message(users):
     msg = f"[報告]下記の方は{N_DAYS_NOTIFY_TO_EXECUTIVES}日連続で体温記録を実施していません。\n"
     for user in users:
         msg += f"- {user['name']} さん\n"
+    return msg
+
+
+def _create_fever_message(users):
+    msg = f'[報告]下記の方は過去{N_DAYS_FEVER}日間の間、{MAX_BODY_TEMPERATURE}℃を超えています。\n'
+    for user in users:
+        msg += f"- {user['name']} さん：{user['max_temp']}℃\n"
     return msg

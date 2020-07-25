@@ -32,6 +32,34 @@ class BigQueryHandler():
 
         return missing_users
 
+    def find_fever_users(self, n_days, max_temp):
+        q = (
+            f'WITH temp AS( '
+            f'   SELECT DATETIME(TIMESTAMP(datetime), "Asia/Tokyo") as datetime,date(TIMESTAMP(datetime), "Asia/Tokyo") as date, user_id, temperature FROM `{self.project_id}.{self.dataset_name}.temperature` '
+            f'    WHERE DATE(TIMESTAMP(datetime), "Asia/Tokyo") > DATE_SUB(CURRENT_DATE("Asia/Tokyo"), INTERVAL {n_days} DAY) '
+            f'    ORDER BY user_id, datetime '
+            f'),'
+            f'latest AS('
+            f'    SELECT MAX(datetime) as datetime, user_id FROM temp GROUP BY user_id, date ORDER BY user_id, date '
+            f'),'
+            f'joined AS('
+            f'    SELECT latest.datetime, temp.user_id, temp.temperature FROM temp INNER JOIN latest ON temp.datetime=latest.datetime AND temp.user_id=latest.user_id '
+            f'),'
+            f'max_temp AS('
+            f'    SELECT user_id, MAX(temperature) as max_temp  FROM joined GROUP BY user_id'
+            f')'
+            f'SELECT user_id, name, max_temp.max_temp '
+            f'FROM max_temp LEFT JOIN `{self.project_id}.{self.dataset_name}.user` ON max_temp.user_id=`{self.project_id}.{self.dataset_name}.user`.id '
+            f'WHERE max_temp.max_temp>{max_temp}'
+        )
+        df = self._query_and_convert_to_df(q)
+
+        # convert to list of dictionary
+        users = []
+        for k, v in df.to_dict(orient='index').items():
+            users.append(v)
+        return users
+
     def _get_all_user(self):
         q = (
             f'SELECT id, name FROM {self.project_id}.{self.dataset_name}.user'
@@ -46,8 +74,6 @@ class BigQueryHandler():
             f'ORDER BY user_id, date'
         )
         return self._query_and_convert_to_df(q)
-        # WITH name_table AS(SELECT name, id FROM covid19-284209.body_temperature_data.user)
-        # SELECT datetime, name_table.name, temperature.temperature, name_table.id FROM covid19-284209.body_temperature_data.temperature INNER JOIN name_table ON temperature.user_id=name_table.id
 
     def _query_and_convert_to_df(self, query):
         rows = self.bq.query(query).result()

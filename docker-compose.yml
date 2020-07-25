@@ -10,3 +10,4 @@ services:
         - DEVELOPER=${DEVELOPER}
         - NOTIFY_TOKEN=${NOTIFY_TOKEN}
     command: python -u test_line.py
+    # command: python -u test_bq.py

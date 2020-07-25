@@ -13,18 +13,18 @@ class BigQueryHandler():
 
     def find_missing_users(self, n_days):
         # get all user id from user table
-        df_user = self._get_all_user_ids()
+        df_user = self._get_all_user()
         # get last `n_days` records from temperature table
         df_temp = self._get_last_n_days_temp(n_days)
         # join by user_id
         df = pd.merge(df_user, df_temp, left_on='id', right_on='user_id', how='left')[
-            ['name', 'id', 'datetime', 'temperature']]
+            ['name', 'id', 'date', 'temperature']]
         # count data
         missing_users = []
         for id_ in df['id'].unique():
             count = df.query(f'id == "{id_}"')[
-                'datetime'].dropna().unique().size
-            name = df.query(f'id == "{id_}"')['name']
+                'date'].dropna().unique().size
+            name = df.query(f'id == "{id_}"')['name'].unique()[0]
             logging.info(
                 f'{name} has {count} unique records in the last {n_days} days.')
             if count == 0:
@@ -40,9 +40,9 @@ class BigQueryHandler():
 
     def _get_last_n_days_temp(self, n_days):
         q = (
-            f'SELECT DATE(TIMESTAMP(datetime), "Asia/Tokyo") as date, user_id, temperature'
-            f'FROM {self.project_id}.{self.dataset_name}.temperature'
-            f'WHERE DATE(TIMESTAMP(datetime), "Asia/Tokyo") > DATE_SUB(CURRENT_DATE("Asia/Tokyo"), INTERVAL {n_days} DAY)'
+            f'SELECT DATE(TIMESTAMP(datetime), "Asia/Tokyo") as date, user_id, temperature '
+            f'FROM {self.project_id}.{self.dataset_name}.temperature '
+            f'WHERE DATE(TIMESTAMP(datetime), "Asia/Tokyo") > DATE_SUB(CURRENT_DATE("Asia/Tokyo"), INTERVAL {n_days} DAY) '
             f'ORDER BY user_id, date'
         )
         return self._query_and_convert_to_df(q)

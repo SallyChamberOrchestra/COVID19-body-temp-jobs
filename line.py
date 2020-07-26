@@ -1,3 +1,4 @@
+import logging
 import requests
 
 
@@ -22,6 +23,7 @@ class PushMessanger():
             },
             json=data
         )
+        logging.info(data)
         res.raise_for_status()
 
 
@@ -38,4 +40,5 @@ class NotifyMessanger():
             },
             data=data
         )
+        logging.info(data)
         res.raise_for_status()

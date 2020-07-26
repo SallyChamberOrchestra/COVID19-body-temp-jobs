@@ -77,7 +77,7 @@ def notify_missing_to_users(request):
 
 
 def _create_prompt_message():
-    return "おはようございます。今日の体温測定をお忘れでは無いでしょうか？明日は忘れないうちに登録のほど、よろしくお願いいたします！"
+    return "こんばんは。今日の体温測定をお忘れでは無いでしょうか？明日は忘れないうちに登録のほど、よろしくお願いいたします！"
 
 
 def _create_notification_message(users):

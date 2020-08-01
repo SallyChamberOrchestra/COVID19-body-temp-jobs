@@ -22,7 +22,7 @@ N_DAYS_FEVER = os.environ.get('N_DAYS_FEVER')
 MAX_BODY_TEMPERATURE = os.environ.get('MAX_BODY_TEMPERATURE')
 
 
-def notify_missing_to_users(request):
+def notify_missing_to_users(event, context):
     logging.info(
         f'this process runned at: {date.today().strftime("%Y-%m-%d")}')
     # notify if miss to register -> user

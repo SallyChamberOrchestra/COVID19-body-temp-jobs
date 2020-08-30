@@ -50,7 +50,7 @@ class BigQueryHandler():
             f')'
             f'SELECT user_id, name, max_temp.max_temp '
             f'FROM max_temp LEFT JOIN `{self.project_id}.{self.dataset_name}.user` ON max_temp.user_id=`{self.project_id}.{self.dataset_name}.user`.id '
-            f'WHERE max_temp.max_temp>{max_temp}'
+            f'WHERE max_temp.max_temp>={max_temp}'
         )
         df = self._query_and_convert_to_df(q)
 

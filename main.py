@@ -90,5 +90,5 @@ def _create_notification_message(users):
 def _create_fever_message(users):
     msg = f'[報告]下記の方は過去{N_DAYS_FEVER}日間の間、{MAX_BODY_TEMPERATURE}℃を超えています。\n'
     for user in users:
-        msg += f"- {user['name']} さん：{user['max_temp']}℃\n"
+        msg += f"- {user['name']} さん\n"
     return msg
